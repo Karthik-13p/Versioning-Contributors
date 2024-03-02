@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid black;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const box = 20;
+        let snake = [{ x: 10 * box, y: 10 * box }];
+        let food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
+        let score = 0;
+        let d = '';
+        let snakeColor = 'green';
+        let gameOverFlag = false;
+
+        document.addEventListener('keydown', direction);
+
+        function direction(event) {
+            if (event.key === 'ArrowUp' && d !== 'DOWN') {
+                d = 'UP';
+            } else if (event.key === 'ArrowDown' && d !== 'UP') {
+                d = 'DOWN';
+            } else if (event.key === 'ArrowLeft' && d !== 'RIGHT') {
+                d = 'LEFT';
+            } else if (event.key === 'ArrowRight' && d !== 'LEFT') {
+                d = 'RIGHT';
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw snake
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = (i === 0) ? snakeColor : 'lime';
+                ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                ctx.strokeStyle = 'black';
+                ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+            }
+
+            // Draw food
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x, food.y, box, box);
+
+            // Move snake
+            let snakeX = snake[0].x;
+            let snakeY = snake[0].y;
+
+            if (d === 'UP') snakeY -= box;
+            if (d === 'DOWN') snakeY += box;
+            if (d === 'LEFT') snakeX -= box;
+            if (d === 'RIGHT') snakeX += box;
+
+            // Check if snake eats food
+            if (snakeX === food.x && snakeY === food.y) {
+                score++;
+                food = { x: Math.floor(Math.random() * 20) * box, y: Math.floor(Math.random() * 20) * box };
+                snakeColor = (score <= 10) ? 'green' : 'blue';
+            } else {
+                snake.pop();
+            }
+
+            // Add new head to snake
+            let newHead = { x: snakeX, y: snakeY };
+            snake.unshift(newHead);
+
+            // Game over conditions
+            if (snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake.slice(1))) {
+                gameOverFlag = true;
+                gameOver();
+            }
+
+            // Display score
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.fillText('Score: ' + score, 10, 20);
+
+            // Change background color randomly after score 5
+            if (score >= 5 && !gameOverFlag) {
+                const randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16); // Generate random hex color code
+                document.body.style.backgroundColor = randomColor;
+            }
+
+            // Continue drawing if game is not over
+            if (!gameOverFlag) {
+                setTimeout(draw, 100);
+            }
+        }
+
+        function collision(head, array) {
+            for (let i = 0; i < array.length; i++) {
+                if (head.x === array[i].x && head.y === array[i].y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function gameOver() {
+            ctx.fillStyle = 'black';
+            ctx.font = '40px Arial';
+            ctx.fillText('Game Over', canvas.width / 2 - 120, canvas.height / 2);
+        }
+
+        draw();
+    </script>
+</body>
+</html>
